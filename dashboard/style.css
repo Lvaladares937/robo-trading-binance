@@ -1,0 +1,584 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    color: #fff;
+    min-height: 100vh;
+}
+
+.dashboard-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Header */
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding: 20px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 15px;
+    backdrop-filter: blur(10px);
+}
+
+.logo h1 {
+    font-size: 28px;
+    background: linear-gradient(90deg, #00d2ff, #3a7bd5);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.logo p {
+    color: #8899b0;
+    font-size: 14px;
+}
+
+.last-update {
+    background: rgba(0,210,255,0.1);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    color: #00d2ff;
+}
+
+/* Stats Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.stat-card {
+    background: rgba(255,255,255,0.05);
+    border-radius: 15px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    background: rgba(255,255,255,0.08);
+}
+
+.stat-icon {
+    font-size: 40px;
+}
+
+.stat-info h3 {
+    font-size: 12px;
+    color: #8899b0;
+    margin-bottom: 8px;
+}
+
+.stat-info p {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+/* Charts Grid */
+.charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.chart-card {
+    background: rgba(255,255,255,0.05);
+    border-radius: 15px;
+    padding: 20px;
+}
+
+.chart-card h3 {
+    margin-bottom: 20px;
+    color: #00d2ff;
+}
+
+/* Data Tables */
+.data-table {
+    background: rgba(255,255,255,0.05);
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 30px;
+}
+
+.data-table h3 {
+    margin-bottom: 20px;
+    color: #00d2ff;
+}
+
+.table-wrapper {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+th {
+    background: rgba(0,210,255,0.1);
+    color: #00d2ff;
+    font-weight: 600;
+}
+
+tr:hover {
+    background: rgba(255,255,255,0.03);
+}
+
+/* Status badges */
+.badge-compra {
+    background: rgba(0,255,0,0.2);
+    color: #00ff00;
+    padding: 4px 8px;
+    border-radius: 20px;
+    font-size: 12px;
+    display: inline-block;
+}
+
+.badge-venda {
+    background: rgba(255,0,0,0.2);
+    color: #ff4444;
+    padding: 4px 8px;
+    border-radius: 20px;
+    font-size: 12px;
+    display: inline-block;
+}
+
+.badge-aberta {
+    background: rgba(0,210,255,0.2);
+    color: #00d2ff;
+    padding: 4px 8px;
+    border-radius: 20px;
+    font-size: 12px;
+    display: inline-block;
+}
+
+.badge-fechada {
+    background: rgba(255,255,255,0.1);
+    color: #8899b0;
+    padding: 4px 8px;
+    border-radius: 20px;
+    font-size: 12px;
+    display: inline-block;
+}
+
+/* Loading */
+.loading {
+    text-align: center;
+    padding: 40px;
+    color: #8899b0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .charts-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .dashboard-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 15px;
+    }
+}
+
+/* Stats Advanced */
+.stats-advanced {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.stat-card-small {
+    background: rgba(255,255,255,0.05);
+    border-radius: 12px;
+    padding: 15px;
+    text-align: center;
+}
+
+.stat-card-small h4 {
+    color: #8899b0;
+    font-size: 12px;
+    margin-bottom: 10px;
+}
+
+.stat-card-small p {
+    font-size: 22px;
+    font-weight: bold;
+    color: #00d2ff;
+}
+
+.stat-card-small div {
+    font-size: 14px;
+    color: #fff;
+}
+
+.top-moeda-item, .tendencia-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    font-size: 12px;
+}
+
+.tendencia-nome {
+    color: #8899b0;
+}
+
+.tendencia-valor {
+    color: #00d2ff;
+    font-weight: bold;
+}
+
+/* Refresh Button */
+.refresh-btn {
+    background: rgba(0,210,255,0.2);
+    border: none;
+    color: #00d2ff;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 5px 10px;
+    border-radius: 20px;
+    margin-left: 10px;
+    transition: all 0.3s;
+}
+
+.refresh-btn:hover {
+    background: rgba(0,210,255,0.4);
+    transform: rotate(180deg);
+}
+
+/* Row hover */
+.data-table tbody tr:hover {
+    background: rgba(0,210,255,0.1);
+    transition: background 0.3s;
+}
+
+/* Seção de Gráfico */
+.grafico-principal {
+    background: rgba(255,255,255,0.05);
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 30px;
+}
+
+.grafico-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.grafico-header h2 {
+    color: #00d2ff;
+    font-size: 18px;
+    margin: 0;
+}
+
+.grafico-controls {
+    display: flex;
+    gap: 15px;
+}
+
+.select-par, .select-timeframe {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(0,210,255,0.3);
+    color: #fff;
+    padding: 8px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.select-par:hover, .select-timeframe:hover {
+    border-color: #00d2ff;
+}
+
+.info-suporte {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+    padding: 10px;
+    background: rgba(0,0,0,0.2);
+    border-radius: 10px;
+    flex-wrap: wrap;
+}
+
+.info-item {
+    font-size: 13px;
+    color: #8899b0;
+}
+
+.info-item strong {
+    color: #00d2ff;
+}
+
+.grafico-wrapper {
+    height: 400px;
+    margin-bottom: 20px;
+}
+
+.rsi-wrapper {
+    height: 150px;
+}
+
+.erro-grafico {
+    text-align: center;
+    padding: 50px;
+    color: #ff4444;
+    background: rgba(255,0,0,0.1);
+    border-radius: 10px;
+}
+
+@media (max-width: 768px) {
+    .grafico-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .info-suporte {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .grafico-wrapper {
+        height: 300px;
+    }
+    
+    .rsi-wrapper {
+        height: 120px;
+    }
+}
+
+.volume-wrapper {
+    height: 100px;
+    margin-top: 10px;
+}
+
+.rsi-wrapper {
+    height: 150px;
+    margin-top: 10px;
+}
+
+.loading-grafico {
+    text-align: center;
+    padding: 50px;
+    color: #00d2ff;
+}
+
+.erro-grafico {
+    text-align: center;
+    padding: 50px;
+    color: #ff4444;
+    background: rgba(255,0,0,0.1);
+    border-radius: 10px;
+}
+
+/* ==================== RESPONSIVIDADE EXTRA ==================== */
+
+/* Tablets (768px - 1024px) */
+@media (max-width: 1024px) {
+    .dashboard-container {
+        padding: 15px;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+    }
+    
+    .charts-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .grafico-wrapper {
+        height: 350px;
+    }
+}
+
+/* Celulares grandes (640px - 768px) */
+@media (max-width: 768px) {
+    .dashboard-header {
+        flex-direction: column;
+        text-align: center;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .logo h1 {
+        font-size: 22px;
+    }
+    
+    .logo p {
+        font-size: 11px;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+    
+    .stat-card {
+        padding: 12px;
+    }
+    
+    .stat-icon {
+        font-size: 28px;
+    }
+    
+    .stat-info p {
+        font-size: 18px;
+    }
+    
+    .grafico-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+    
+    .grafico-controls {
+        justify-content: center;
+    }
+    
+    .info-suporte {
+        gap: 10px;
+    }
+    
+    .info-item {
+        font-size: 11px;
+    }
+    
+    .grafico-wrapper {
+        height: 280px;
+    }
+    
+    .volume-wrapper {
+        height: 80px;
+    }
+    
+    .rsi-wrapper {
+        height: 120px;
+    }
+    
+    .chart-card {
+        padding: 15px;
+    }
+    
+    .data-table {
+        padding: 15px;
+    }
+    
+    th, td {
+        padding: 8px;
+        font-size: 11px;
+    }
+}
+
+/* Celulares pequenos (até 640px) */
+@media (max-width: 640px) {
+    .dashboard-container {
+        padding: 10px;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+    
+    .stat-card {
+        padding: 10px;
+    }
+    
+    .stat-icon {
+        font-size: 24px;
+    }
+    
+    .stat-info h3 {
+        font-size: 10px;
+    }
+    
+    .stat-info p {
+        font-size: 16px;
+    }
+    
+    .grafico-principal {
+        padding: 12px;
+    }
+    
+    .grafico-wrapper {
+        height: 250px;
+    }
+    
+    .volume-wrapper {
+        height: 70px;
+    }
+    
+    .rsi-wrapper {
+        height: 100px;
+    }
+    
+    .select-par, .select-timeframe {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+    
+    .info-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+    
+    .info-card {
+        padding: 6px 10px;
+        font-size: 11px;
+    }
+    
+    .badge-compra, .badge-venda, .badge-aberta, .badge-fechada {
+        padding: 2px 6px;
+        font-size: 9px;
+    }
+    
+    .table-wrapper {
+        overflow-x: auto;
+    }
+    
+    table {
+        min-width: 600px;
+    }
+}
+
+/* Ajuste para telas muito pequenas (320px) */
+@media (max-width: 480px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .grafico-wrapper {
+        height: 220px;
+    }
+}

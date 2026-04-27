@@ -1,0 +1,33 @@
+# Arquivos de ambiente e senhas
+.env
+*.env
+
+# Logs
+*.log
+trading_bot.log
+trading_bot_simulado.log
+
+# Banco de dados
+*.db
+data/*.db
+estado_bot.db
+
+# Cache Python
+__pycache__/
+*.pyc
+*.pyo
+
+# IDE
+.vscode/
+.idea/
+
+# Arquivos grandes
+*.exe
+*.zip
+*.rar
+
+# Pasta de dados (opcional - se quiser manter histórico, remova essa linha)
+# data/
+
+# Dashboard (opcional - se quiser subir o dashboard, remova essa linha)
+# dashboard/
