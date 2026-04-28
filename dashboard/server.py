@@ -239,6 +239,40 @@ def get_performance():
     conn.close()
     return jsonify(performance)
 
+@app.route('/api/analise_detalhada/<par>')
+def get_analise_detalhada(par):
+    """Retorna análise detalhada de um par específico"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT * FROM analises 
+        WHERE par = ? 
+        ORDER BY id DESC 
+        LIMIT 1
+    ''', (par,))
+    analise = cursor.fetchone()
+    conn.close()
+    return jsonify(dict(analise) if analise else {})
+
+@app.route('/api/analises_estrutura')
+def get_analises_estrutura():
+    """Retorna dados reais da estrutura de mercado"""
+    limit = request.args.get('limit', 30, type=int)
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    # Buscar da tabela estrutura_mercado (dados REAIS)
+    cursor.execute('''
+        SELECT * FROM estrutura_mercado 
+        ORDER BY id DESC 
+        LIMIT ?
+    ''', (limit,))
+    
+    estruturas = [dict(row) for row in cursor.fetchall()]
+    conn.close()
+    
+    return jsonify(estruturas)
+
 if __name__ == '__main__':
     print("=" * 50)
     print("🚀 Dashboard do Robô Trader")

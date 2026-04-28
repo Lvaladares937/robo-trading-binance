@@ -1154,14 +1154,33 @@ class BotTrading:
             
             lucro_atual = ((preco_atual / estado.preco_compra) - 1) * 100
             
-            stop_loss = estado.preco_maximo * (1 - Config.STOP_LOSS_DINAMICO)
+            # ========== STOP LOSS DINÂMICO POR ATIVO ==========
+            # Stops específicos para cada ativo (mais volátil = stop maior)
+            stops_por_ativo = {
+                'BTCBRL': 0.02,     # 2% - Bitcoin mais estável
+                'ETHBRL': 0.025,    # 2.5%
+                'SOLBRL': 0.03,     # 3%
+                'BNBBRL': 0.025,    # 2.5%
+                'LTCBRL': 0.03,     # 3%
+                'DOGEBRL': 0.045,   # 4.5% - Dogecoin muito volátil
+                'XRPBRL': 0.035,    # 3.5%
+                'NEARBRL': 0.04,    # 4%
+                'SANDBRL': 0.05,    # 5% - SAND muito volátil
+                'ATOMBRL': 0.04,    # 4%
+            }
+            
+            # Pega o stop específico do ativo ou usa 3% como padrão
+            stop_percent = stops_por_ativo.get(estado.par, 0.03)
+            stop_loss = estado.preco_maximo * (1 - stop_percent)
+            
             if preco_atual <= stop_loss:
-                self.logger.info(f"\n[STOP LOSS] Dinamico atingido para {estado.par}")
+                self.logger.info(f"\n[STOP LOSS] {stop_percent*100:.0f}% atingido para {estado.par}")
                 self.logger.info(f"   Preco maximo: {estado.preco_maximo:.2f}")
                 self.logger.info(f"   Stop Loss: {stop_loss:.2f}")
                 self.logger.info(f"   Lucro/Prejuizo: {lucro_atual:.2f}%")
                 return True
             
+            # ========== PROTEÇÃO DE LUCRO ==========
             if lucro_atual >= 8.0:
                 queda_do_maximo = ((estado.preco_maximo - preco_atual) / estado.preco_maximo) * 100
                 if queda_do_maximo >= 1.0:
@@ -1170,6 +1189,7 @@ class BotTrading:
                     self.logger.info(f"   Queda do maximo: {queda_do_maximo:.2f}%")
                     return True
             
+            # ========== QUEBRA DE ESTRUTURA ==========
             if len(df_1h) >= 50:
                 fechamentos = df_1h['close'].astype(float)
                 fundo_recente = fechamentos.tail(30).min()
@@ -1306,12 +1326,29 @@ class BotTrading:
         
         score_estrutura = 50
         tendencia_estrutural = "NEUTRA"
+        topos_lista = ""
+        fundos_lista = ""
+        topos_altos = False
+        fundos_altos = False
+        forca_tendencia = 0
+        estrutura_quebrada = False
         
         if not analise_estrutura.get('erro', False):
             score_estrutura = analise_estrutura['score']
             tendencia_estrutural = analise_estrutura['tendencia_macro']
+            forca_tendencia = analise_estrutura.get('forca_tendencia', 0)
+            estrutura_quebrada = analise_estrutura.get('estrutura_quebrada', False)
+            topos_altos = analise_estrutura.get('topos_altos', False)
+            fundos_altos = analise_estrutura.get('fundos_altos', False)
+            
+            # Formata listas de topos e fundos para salvar
+            if analise_estrutura.get('topos'):
+                topos_lista = ', '.join([f"{t['preco']:.2f}" for t in analise_estrutura['topos'][-5:]])
+            if analise_estrutura.get('fundos'):
+                fundos_lista = ', '.join([f"{f['preco']:.2f}" for f in analise_estrutura['fundos'][-5:]])
+            
             self.logger.info(f"   Tendencia Estrutural: {analise_estrutura['tendencia_estrutural']} (score: {score_estrutura:.1f})")
-            self.logger.info(f"   Forca da Estrutura: {analise_estrutura['forca_tendencia']:.0f}%")
+            self.logger.info(f"   Forca da Estrutura: {forca_tendencia:.0f}%")
             self.logger.info(f"   Ultimo Topo: {analise_estrutura['ultimo_topo']:.2f} | Ultimo Fundo: {analise_estrutura['ultimo_fundo']:.2f}")
         
         # ========== COMBINA AS ANÁLISES 1D ==========
@@ -1321,7 +1358,7 @@ class BotTrading:
         )
         
         # A tendência combinada prioriza a estrutura se ela for forte (>70%)
-        if not analise_estrutura.get('erro', False) and analise_estrutura['forca_tendencia'] >= 70:
+        if not analise_estrutura.get('erro', False) and forca_tendencia >= 70:
             tendencia_combinada = tendencia_estrutural
         else:
             tendencia_combinada = analise_tradicional['tendencia']
@@ -1402,7 +1439,54 @@ class BotTrading:
             if score_final < Config.SCORE_MINIMO_COMPRA:
                 self.logger.info(f"   - Score final abaixo do minimo")
         
-        self.logger.info(f"{'='*80}\n")
+        # ========== 6. SALVAR ESTRUTURA DE MERCADO NO BANCO ==========
+        try:
+            # Usar get_db() que é thread-safe
+            conn = self.get_db()
+            cursor = conn.cursor()
+            
+            # Criar tabela de estrutura se não existir
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS estrutura_mercado (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    par TEXT NOT NULL,
+                    timestamp TEXT NOT NULL,
+                    topos TEXT,
+                    fundos TEXT,
+                    topos_altos INTEGER,
+                    fundos_altos INTEGER,
+                    tendencia_estrutural TEXT,
+                    forca_tendencia REAL,
+                    estrutura_quebrada INTEGER,
+                    score_estrutura REAL
+                )
+            ''')
+            
+            # Inserir dados
+            cursor.execute('''
+                INSERT INTO estrutura_mercado (
+                    par, timestamp, topos, fundos, topos_altos, 
+                    fundos_altos, tendencia_estrutural, forca_tendencia, 
+                    estrutura_quebrada, score_estrutura
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (
+                estado.par,
+                datetime.now().isoformat(),
+                topos_lista,
+                fundos_lista,
+                1 if topos_altos else 0,
+                1 if fundos_altos else 0,
+                tendencia_estrutural,
+                forca_tendencia,
+                1 if estrutura_quebrada else 0,
+                score_estrutura
+            ))
+            conn.commit()
+            
+            self.logger.info(f"✅ Estrutura de mercado salva para {estado.par}")
+            
+        except Exception as e:
+            self.logger.error(f"Erro ao salvar estrutura de mercado: {e}")
         
         return {
             'score_final': score_final,
@@ -1413,12 +1497,17 @@ class BotTrading:
             'score_padroes': analise_padroes['score'],
             'score_entrada': analise_entrada['score'],
             'score_estrutura': score_estrutura,
-            'tendencia_estrutural': analise_estrutura.get('tendencia_estrutural', 'NEUTRA') if not analise_estrutura.get('erro') else 'NEUTRA',
-            'estrutura_quebrada': analise_estrutura.get('estrutura_quebrada', False) if not analise_estrutura.get('erro') else False,
+            'tendencia_estrutural': tendencia_estrutural,
+            'estrutura_quebrada': estrutura_quebrada,
+            'forca_tendencia': forca_tendencia,
+            'topos': topos_lista,
+            'fundos': fundos_lista,
+            'topos_altos': topos_altos,
+            'fundos_altos': fundos_altos,
             'topos_fundos': topos_fundos,
             'padroes_detectados': [p['tipo'] for p in analise_padroes['padroes']]
         }
-
+    
     def executar_estrategia(self, estado: Estado):
         try:
             if estado.posicao_aberta:

@@ -73,7 +73,12 @@
                 <h1>🤖 Robô Trader Professional</h1>
                 <p>Multi-Timeframe | Estrutura de Mercado | Análise de Topos e Fundos</p>
             </div>
-            <div class="last-update">📡 Última atualização: <span id="last-update">--</span></div>
+            <div class="last-update">
+                📡 Última atualização: <span id="last-update">--:--:--</span>
+                <button onclick="forcarAtualizacao()" style="margin-left: 10px; background: #00d2ff20; border: none; color: #00d2ff; padding: 5px 12px; border-radius: 20px; cursor: pointer; font-size: 12px;">
+                    🔄 Atualizar
+                </button>
+            </div>
         </div>
 
         <!-- Stats Cards -->
@@ -143,6 +148,37 @@
                 </table>
             </div>
         </div>
+
+        <!-- Seção de Logs Detalhados -->
+        <div class="data-table">
+            <h3>📋 LOGS DETALHADOS DA ANÁLISE</h3>
+            <div class="table-wrapper">
+                <table id="logs-table">
+                    <thead>
+                        <tr><th>Data/Hora</th><th>Par</th><th>Tendência</th><th>Score 1D</th><th>Direção 4H</th><th>Score 4H</th><th>Padrões</th><th>Score 15M</th><th>Score Final</th><th>Sinal</th></tr>
+                    </thead>
+                    <tbody id="logs-body">
+                        <tr><td colspan="10">Carregando...{"<>"}<\/td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Seção de Detalhes da Estrutura de Mercado -->
+        <div class="data-table">
+            <h3>📊 ESTRUTURA DE MERCADO (Topos e Fundos)</h3>
+            <div class="table-wrapper">
+                <table id="estrutura-table">
+                    <thead>
+                        <tr><th>Data/Hora</th><th>Par</th><th>Topos</th><th>Fundos</th><th>Topos Altos</th><th>Fundos Altos</th><th>Estrutura</th><th>Força</th><th>Quebrada</th></tr>
+                    </thead>
+                    <tbody id="estrutura-body">
+                        <tr><td colspan="9">Carregando...{"<>"}<\/td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
     </div>
 
     <script src="dashboard.js"></script>

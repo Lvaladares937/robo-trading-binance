@@ -8,14 +8,22 @@ let operacoesChart = null;
 let currentPar = '';
 let currentTimeframe = '4h';
 
-// Aguardar o DOM carregar
+
+// Variável global para o intervalo (fora do DOMContentLoaded)
+let intervaloAutoUpdate = null;
+
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Dashboard profissional iniciado');
+    
+    // Carregar dados iniciais
     carregarPares();
     carregarTodosDados();
     
-    // Atualizar a cada 30 segundos
-    setInterval(() => {
+    // Iniciar atualização automática
+    if (intervaloAutoUpdate) clearInterval(intervaloAutoUpdate);
+    
+    intervaloAutoUpdate = setInterval(() => {
+        console.log('🔄 Atualização automática:', new Date().toLocaleTimeString());
         carregarTodosDados();
         if (currentPar) carregarGrafico(currentPar);
     }, 30000);
@@ -33,21 +41,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ==================== CARREGAR DADOS PRINCIPAIS ====================
-
-async function carregarTodosDados() {
-    try {
-        await Promise.all([
-            carregarResumo(),
-            carregarEstados(),
-            carregarOperacoes(),
-            carregarAnalises(),
-            carregarPerformance()
-        ]);
-        document.getElementById('last-update').textContent = new Date().toLocaleTimeString();
-    } catch (error) {
-        console.error('Erro ao carregar dados:', error);
-    }
-}
 
 // Carregar resumo (cards)
 async function carregarResumo() {
@@ -337,6 +330,126 @@ async function carregarGrafico(par) {
     }
 }
 
+// ==================== LOGS DETALHADOS ====================
+
+async function carregarLogsDetalhados() {
+    try {
+        const response = await fetch(`${API_URL}/analises?limit=50`);
+        const analises = await response.json();
+        
+        const tbody = document.getElementById('logs-body');
+        if (!tbody) return;
+        
+        if (!analises || analises.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="10">Nenhum log encontrado</td></tr>';
+            return;
+        }
+        
+        // Buscar dados adicionais de cada análise
+        const logsDetalhados = [];
+        
+        for (const analise of analises) {
+            // Buscar detalhes específicos da análise
+            const detalhesResponse = await fetch(`${API_URL}/analise_detalhada/${analise.par}`);
+            const detalhes = await detalhesResponse.json();
+            
+            logsDetalhados.push({
+                ...analise,
+                score_1d: detalhes.score_1d || '-',
+                score_4h: detalhes.score_4h || '-',
+                score_padroes: detalhes.score_padroes || '-',
+                score_entrada: detalhes.score_entrada || '-',
+                tendencia_1d: detalhes.tendencia_1d || analise.tendencia_macro,
+                padrao_detectado: analise.padrao_detectado || '-'
+            });
+        }
+        
+        tbody.innerHTML = logsDetalhados.map(log => {
+            const sinalClass = log.sinal_compra ? 'badge-compra' : 'badge-fechada';
+            const sinalText = log.sinal_compra ? 'COMPRAR' : 'AGUARDAR';
+            
+            return `
+                <tr onclick="carregarGrafico('${log.par}')" style="cursor:pointer">
+                    <td class="text-xs">${formatarData(log.timestamp)}</td>
+                    <td class="font-medium">${log.par}</td>
+                    <td>${log.tendencia_1d || '-'}</td>
+                    <td>${log.score_1d !== '-' ? log.score_1d.toFixed(1) : '-'}</td>
+                    <td>${log.direcao_4h || '-'}</td>
+                    <td>${log.score_4h !== '-' ? log.score_4h.toFixed(1) : '-'}</td>
+                    <td class="text-xs">${log.padrao_detectado || '-'}</td>
+                    <td>${log.score_entrada !== '-' ? log.score_entrada.toFixed(1) : '-'}</td>
+                    <td class="font-bold">${log.score_total ? log.score_total.toFixed(1) : '-'}</td>
+                    <td><span class="${sinalClass}">${sinalText}</span></td>
+                </tr>
+            `;
+        }).join('');
+        
+    } catch (error) {
+        console.error('Erro ao carregar logs detalhados:', error);
+        const tbody = document.getElementById('logs-body');
+        if (tbody) tbody.innerHTML = '<tr><td colspan="10">Erro ao carregar logs</td></tr>';
+    }
+}
+
+// ==================== ESTRUTURA DE MERCADO ====================
+
+async function carregarEstruturaMercado() {
+    try {
+        const response = await fetch(`${API_URL}/analises_estrutura?limit=30`);
+        const estruturas = await response.json();
+        
+        const tbody = document.getElementById('estrutura-body');
+        if (!tbody) return;
+        
+        if (!estruturas || estruturas.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="9">Nenhum dado de estrutura encontrado</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = estruturas.map(est => {
+            const quebradaClass = est.estrutura_quebrada ? 'text-red' : 'text-green';
+            const quebradaText = est.estrutura_quebrada ? 'SIM ⚠️' : 'NÃO';
+            
+            return `
+                <tr onclick="carregarGrafico('${est.par}')" style="cursor:pointer">
+                    <td class="text-xs">${formatarData(est.timestamp)}</td>
+                    <td class="font-medium">${est.par}</td>
+                    <td class="text-xs">${est.topos || '-'}</td>
+                    <td class="text-xs">${est.fundos || '-'}</td>
+                    <td>${est.topos_altos ? '✅ SIM' : '❌ NAO'}</td>
+                    <td>${est.fundos_altos ? '✅ SIM' : '❌ NAO'}</td>
+                    <td class="font-bold">${est.tendencia_estrutural || 'NEUTRA'}</td>
+                    <td>${est.forca_tendencia || 0}%</td>
+                    <td class="${quebradaClass}">${quebradaText}</td>
+                </tr>
+            `;
+        }).join('');
+        
+    } catch (error) {
+        console.error('Erro ao carregar estrutura de mercado:', error);
+        const tbody = document.getElementById('estrutura-body');
+        if (tbody) tbody.innerHTML = '<tr><td colspan="9">Erro ao carregar dados</td></tr>';
+    }
+}
+
+// Atualizar carregarTodosDados para incluir os novos
+async function carregarTodosDados() {
+    try {
+        await Promise.all([
+            carregarResumo(),
+            carregarEstados(),
+            carregarOperacoes(),
+            carregarAnalises(),
+            carregarPerformance(),
+            carregarLogsDetalhados(),
+            carregarEstruturaMercado()
+        ]);
+        document.getElementById('last-update').textContent = new Date().toLocaleTimeString();
+    } catch (error) {
+        console.error('Erro ao carregar dados:', error);
+    }
+}
+
 function criarGraficoPreco(data) {
     const ctx = document.getElementById('candlestick-chart');
     if (!ctx) return;
@@ -507,3 +620,29 @@ function formatarData(dataStr) {
 // Funções globais
 window.carregarGrafico = carregarGrafico;
 window.atualizarManual = carregarTodosDados;
+// Função global para forçar atualização manual
+window.forcarAtualizacao = function() {
+    console.log('🔄 Forçando atualização manual...');
+    carregarTodosDados();
+    if (currentPar) carregarGrafico(currentPar);
+};
+
+// Função para parar a atualização automática (se necessário)
+window.pararAtualizacao = function() {
+    if (intervaloAutoUpdate) {
+        clearInterval(intervaloAutoUpdate);
+        intervaloAutoUpdate = null;
+        console.log('⏹️ Atualização automática parada');
+    }
+};
+
+// Função para reiniciar a atualização automática
+window.iniciarAtualizacao = function() {
+    if (intervaloAutoUpdate) pararAtualizacao();
+    intervaloAutoUpdate = setInterval(() => {
+        console.log('🔄 Atualização automática:', new Date().toLocaleTimeString());
+        carregarTodosDados();
+        if (currentPar) carregarGrafico(currentPar);
+    }, 30000);
+    console.log('▶️ Atualização automática iniciada');
+};
